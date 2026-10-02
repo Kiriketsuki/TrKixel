@@ -179,6 +179,16 @@ export function createTrKixel(rootElement) {
         }
     }
 
+    function redoAction() {
+        if (engine.redo()) {
+            redraw();
+            updateUndoButton();
+            showToast("Redo");
+        } else {
+            showToast("Nothing to Redo");
+        }
+    }
+
     let updateColorUI = function (cssString) {
         const colorState = engine.getColor();
         colorPreviewBox.style.backgroundColor = cssString;
@@ -652,7 +662,11 @@ export function createTrKixel(rootElement) {
             if (e.ctrlKey) {
                 if (e.key === "z" || e.key === "Z") {
                     e.preventDefault();
-                    undoAction();
+                    if (e.shiftKey) {
+                        redoAction();
+                    } else {
+                        undoAction();
+                    }
                 } else if (e.key === "=" || e.key === "+") {
                     e.preventDefault();
                     if (e.shiftKey) {
@@ -1019,6 +1033,7 @@ export function createTrKixel(rootElement) {
         },
         setTool,
         undoAction,
+        redoAction,
         zoomIn: () => performZoom(0.1),
         zoomOut: () => performZoom(-0.1),
         resetZoom: () => {

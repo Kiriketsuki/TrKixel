@@ -1,4 +1,4 @@
-import { open, save } from '@tauri-apps/plugin-dialog';
+import { open, save, message } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { getCurrentPath, setCurrentPath, markClean, getPalette, setPalette } from './state.js';
 import { stateToEngineConfig, isFileFormatConfig, engineConfigToState } from '../core/config-utils.js';
@@ -10,8 +10,25 @@ export async function openFile(engine) {
     });
     if (!path) return;
 
-    const content = await readTextFile(path);
-    const state = JSON.parse(content);
+    let content;
+    try {
+        content = await readTextFile(path);
+    } catch (err) {
+        await message(`Could not read file: ${err}`, { title: 'Open Failed', kind: 'error' });
+        return;
+    }
+
+    let state;
+    try {
+        state = JSON.parse(content);
+        if (!state || typeof state !== 'object' || !state.gridData) {
+            throw new Error('Missing required fields (gridData)');
+        }
+    } catch (err) {
+        await message(`Invalid TrKixel file: ${err.message}`, { title: 'Open Failed', kind: 'error' });
+        return;
+    }
+
     if (isFileFormatConfig(state.config)) {
         state.config = stateToEngineConfig(state);
     }
@@ -29,7 +46,12 @@ export async function saveFile(engine) {
     const state = engine.getState();
     state.config = engineConfigToState(state.config);
     state.palette = getPalette();
-    await writeTextFile(path, JSON.stringify(state, null, 2));
+    try {
+        await writeTextFile(path, JSON.stringify(state, null, 2));
+    } catch (err) {
+        await message(`Could not save file: ${err}`, { title: 'Save Failed', kind: 'error' });
+        return;
+    }
     markClean();
 }
 
@@ -43,7 +65,12 @@ export async function saveFileAs(engine) {
     const state = engine.getState();
     state.config = engineConfigToState(state.config);
     state.palette = getPalette();
-    await writeTextFile(path, JSON.stringify(state, null, 2));
+    try {
+        await writeTextFile(path, JSON.stringify(state, null, 2));
+    } catch (err) {
+        await message(`Could not save file: ${err}`, { title: 'Save Failed', kind: 'error' });
+        return;
+    }
     setCurrentPath(path);
     markClean();
 }

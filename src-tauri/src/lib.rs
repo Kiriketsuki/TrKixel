@@ -44,9 +44,13 @@ pub fn run() {
             let undo_item = MenuItemBuilder::with_id("menu-undo", "Undo")
                 .accelerator("CmdOrCtrl+Z")
                 .build(app)?;
+            let redo_item = MenuItemBuilder::with_id("menu-redo", "Redo")
+                .accelerator("CmdOrCtrl+Shift+Z")
+                .build(app)?;
 
             let edit_menu = SubmenuBuilder::new(app, "Edit")
                 .item(&undo_item)
+                .item(&redo_item)
                 .build()?;
 
             // View menu items
@@ -91,6 +95,7 @@ pub fn run() {
                     "menu-export-png" => Some("export-png"),
                     "menu-export-svg" => Some("export-svg"),
                     "menu-undo" => Some("undo"),
+                    "menu-redo" => Some("redo"),
                     "menu-zoom-in" => Some("zoom-in"),
                     "menu-zoom-out" => Some("zoom-out"),
                     "menu-zoom-reset" => Some("zoom-reset"),

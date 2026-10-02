@@ -1,5 +1,5 @@
 import { listen } from '@tauri-apps/api/event';
-import { isDirty } from './state.js';
+import { isDirty, markDirty, markClean, setCurrentPath } from './state.js';
 import { openFile, saveFile, saveFileAs } from './file-ops.js';
 import { exportPNG, exportSVG } from './export-ops.js';
 
@@ -14,6 +14,8 @@ export async function initMenuHandler(engine) {
                     if (!confirmed) return;
                 }
                 engine.resetCanvas();
+                setCurrentPath(null);
+                markClean();
                 break;
 
             case 'open':
@@ -38,6 +40,12 @@ export async function initMenuHandler(engine) {
 
             case 'undo':
                 engine.undoAction();
+                markDirty();
+                break;
+
+            case 'redo':
+                engine.redoAction();
+                markDirty();
                 break;
 
             case 'zoom-in':

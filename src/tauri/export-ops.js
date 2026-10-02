@@ -1,4 +1,4 @@
-import { save } from '@tauri-apps/plugin-dialog';
+import { save, message } from '@tauri-apps/plugin-dialog';
 import { writeFile, writeTextFile } from '@tauri-apps/plugin-fs';
 
 export async function exportPNG(engine) {
@@ -10,7 +10,11 @@ export async function exportPNG(engine) {
 
     const blob = await engine.exportImageAsBlob();
     const arrayBuffer = await blob.arrayBuffer();
-    await writeFile(path, new Uint8Array(arrayBuffer));
+    try {
+        await writeFile(path, new Uint8Array(arrayBuffer));
+    } catch (err) {
+        await message(`Could not export PNG: ${err}`, { title: 'Export Failed', kind: 'error' });
+    }
 }
 
 export async function exportSVG(engine) {
@@ -21,5 +25,9 @@ export async function exportSVG(engine) {
     if (!path) return;
 
     const svgString = engine.exportSVGAsString();
-    await writeTextFile(path, svgString);
+    try {
+        await writeTextFile(path, svgString);
+    } catch (err) {
+        await message(`Could not export SVG: ${err}`, { title: 'Export Failed', kind: 'error' });
+    }
 }

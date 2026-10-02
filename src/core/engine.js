@@ -17,6 +17,7 @@ export function createEngine(options = {}) {
 
     let gridData = {};
     let historyQueue = [];
+    let redoQueue = [];
 
     let currentTool = "pencil";
     let brushSize = 1;
@@ -50,12 +51,30 @@ export function createEngine(options = {}) {
         if (historyQueue.length > MAX_HISTORY) {
             historyQueue.shift();
         }
+        redoQueue = [];
     }
 
     function undo() {
         if (historyQueue.length === 0) return false;
+        const current = saveSnapshot();
         const previous = historyQueue.pop();
         gridData = JSON.parse(previous);
+        redoQueue.push(current);
+        if (redoQueue.length > MAX_HISTORY) {
+            redoQueue.shift();
+        }
+        return true;
+    }
+
+    function redo() {
+        if (redoQueue.length === 0) return false;
+        const current = saveSnapshot();
+        const next = redoQueue.pop();
+        gridData = JSON.parse(next);
+        historyQueue.push(current);
+        if (historyQueue.length > MAX_HISTORY) {
+            historyQueue.shift();
+        }
         return true;
     }
 
@@ -212,12 +231,16 @@ export function createEngine(options = {}) {
             recalcDerived();
         },
 
-        // Undo
+        // Undo / Redo
         saveSnapshot,
         pushToHistory,
         undo,
+        redo,
         canUndo() {
             return historyQueue.length > 0;
+        },
+        canRedo() {
+            return redoQueue.length > 0;
         },
 
         // Tool
@@ -328,6 +351,7 @@ export function createEngine(options = {}) {
         resetCanvas() {
             gridData = {};
             historyQueue = [];
+            redoQueue = [];
         },
     };
 }
